@@ -16,20 +16,17 @@
             <FormItem label="歌曲链接">
                 <Input v-model="music.singUrl" placeholder=""></Input>
             </FormItem>
-            <FormItem label="海报链接">
-                <Input v-model="music.posterURL" placeholder=""></Input>
-            </FormItem>
             <FormItem label="上传海报">
-              <div class="demo-upload-list" v-for="item in uploadList" :key="item.id">
-                <template v-if="item.status === 'finished'">
-                    <img :src="'http:\\\\localhost:3000' + item.response.url">
+              <div class="demo-upload-list" v-if="posterURL.status">
+                <template v-if="posterURL.status">
+                    <img :src="posterURL.response.url">
                     <div class="demo-upload-list-cover">
-                        <Icon type="ios-eye-outline" @click.native="handleView(item.name)"></Icon>
-                        <Icon type="ios-trash-outline" @click.native="handleRemove(item)"></Icon>
+                        <Icon type="ios-eye-outline" @click.native="handleView(posterURL.response.url)"></Icon>
+                        <Icon type="ios-trash-outline" @click.native="handleRemove(posterURL)"></Icon>
                     </div>
                 </template>
                 <template v-else>
-                    <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+                    <Progress v-if="posterURL.showProgress" :percent="posterURL.percentage" hide-info></Progress>
                 </template>
               </div>
               <Upload
@@ -51,7 +48,7 @@
                 </div>
               </Upload>
               <Modal title="View Image" v-model="visible">
-                  <img :src="'https://o5wwk8baw.qnssl.com/' + imgName + '/large'" v-if="visible" style="width: 100%">
+                  <img :src="viewImgSrc" v-if="visible" style="width: 100%">
               </Modal>
             </FormItem>
             <FormItem>
@@ -75,11 +72,11 @@ export default {
         title: '',
         singer: '',
         singUrl: '',
-        posterURL: ''
       },
-      uploadList: [],
+      posterURL: '',
       postertList: [],
       visible: false,
+      viewImgSrc: ''
     }
   },
   created () {
@@ -92,6 +89,7 @@ export default {
   },
   methods: {
     submit () {
+      this.music.posterURL = this.posterURL.response.url
       this.$https({
         url: '/api/add',
         method: 'POST',
@@ -106,18 +104,15 @@ export default {
       this.$router.push('/')
     },
     handleView (name) {
-      this.imgName = name;
+      this.viewImgSrc = name;
       this.visible = true;
     },
     handleRemove (file) {
-      const fileList = this.$refs.upload.fileList;
-      this.$refs.upload.fileList.splice(fileList.indexOf(file), 1);
+      this.posterURL = ''
     },
     handleSuccess (res, file) {
       console.log(file)
-      let url = res.data
-      let name = file.name
-      this.uploadList.push(file)
+      this.posterURL = file
     },
     handleFormatError (file) {
       this.$Notice.warning({
@@ -132,13 +127,7 @@ export default {
       });
     },
     handleBeforeUpload () {
-      const check = this.uploadList.length < 5;
-      if (!check) {
-        this.$Notice.warning({
-          title: 'Up to five pictures can be uploaded.'
-        });
-      }
-      return check;
+
     }
   }
 }
@@ -149,5 +138,11 @@ export default {
   display: block;
   float: left;
   margin-right: 30px;
+  width: 200px;
+  height: 200px;
+}
+img{
+  width: 200px;
+  height: 200px;
 }
 </style>
